@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useRef, useEffect } from 'react';
-import { MoreHorizontal, X, Archive, Trash2 } from 'lucide-react';
+import { MoreHorizontal, X, Archive, Trash2, ChevronsLeft } from 'lucide-react';
 import { useListStore } from '@/stores/listStore';
 import * as Popover from '@radix-ui/react-popover';
 import toast from 'react-hot-toast';
@@ -10,9 +10,10 @@ interface ListHeaderProps {
   listId: string;
   title: string;
   cardCount: number;
+  onCollapse?: () => void;
 }
 
-export default function ListHeader({ listId, title, cardCount }: ListHeaderProps) {
+export default function ListHeader({ listId, title, cardCount, onCollapse }: ListHeaderProps) {
   const { updateList, deleteList } = useListStore();
   const [editing, setEditing] = useState(false);
   const [value, setValue] = useState(title);
@@ -116,6 +117,15 @@ export default function ListHeader({ listId, title, cardCount }: ListHeaderProps
               </Popover.Close>
             </div>
             <div className="p-2 space-y-0.5">
+              {onCollapse && (
+                <button
+                  onClick={onCollapse}
+                  className="w-full text-left text-sm text-trello-text hover:bg-white/10 px-3 py-1.5 rounded transition-colors flex items-center gap-2"
+                >
+                  <ChevronsLeft className="w-4 h-4" />
+                  Collapse list
+                </button>
+              )}
               <button
                 onClick={handleArchive}
                 className="w-full text-left text-sm text-trello-text hover:bg-white/10 px-3 py-1.5 rounded transition-colors flex items-center gap-2"
