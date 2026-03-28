@@ -1,6 +1,7 @@
 'use client';
 
-import { useCallback } from 'react';
+import { useCallback, useEffect, useRef } from 'react';
+import { usePathname } from 'next/navigation';
 import { driver } from 'driver.js';
 import 'driver.js/dist/driver.css';
 
@@ -374,7 +375,10 @@ const boardTourSteps = [
   },
 ];
 
-export function useGuidedTour() {
+export function useGuidedTour({ autoStart = false }: { autoStart?: boolean } = {}) {
+  const pathname = usePathname();
+  const hasAutoStarted = useRef(false);
+
   const startHomeTour = useCallback(() => {
     const driverObj = driver({
       showProgress: true,
@@ -412,6 +416,28 @@ export function useGuidedTour() {
     });
     driverObj.drive();
   }, []);
+
+  // Auto-start tour on first visit to each page type
+  useEffect(() => {
+    if (!autoStart || hasAutoStarted.current) return;
+
+    const isBoard = pathname.startsWith('/board/');
+    const storageKey = isBoard ? 'kanflow_board_tour_seen' : 'kanflow_home_tour_seen';
+
+    if (typeof window !== 'undefined' && !localStorage.getItem(storageKey)) {
+      hasAutoStarted.current = true;
+      // Small delay to let the page fully render with all data-tour attributes
+      const timer = setTimeout(() => {
+        if (isBoard) {
+          startBoardTour();
+        } else {
+          startHomeTour();
+        }
+        localStorage.setItem(storageKey, 'true');
+      }, 800);
+      return () => clearTimeout(timer);
+    }
+  }, [autoStart, pathname, startHomeTour, startBoardTour]);
 
   return { startHomeTour, startBoardTour };
 }

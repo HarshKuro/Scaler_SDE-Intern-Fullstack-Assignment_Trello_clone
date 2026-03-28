@@ -13,7 +13,7 @@ import { useGuidedTour } from '@/components/tour/GuidedTour';
 export default function Navbar() {
   const { currentMember, fetchMembers } = useMemberStore();
   const { toggleCreateBoard } = useUiStore();
-  const { startHomeTour, startBoardTour } = useGuidedTour();
+  const { startHomeTour, startBoardTour } = useGuidedTour({ autoStart: true });
   const pathname = usePathname();
 
   useEffect(() => {
