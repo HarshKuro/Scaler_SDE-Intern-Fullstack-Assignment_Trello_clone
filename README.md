@@ -123,32 +123,32 @@ A pixel-perfect, full-stack Kanban project management tool inspired by Trello. B
 
 ```
 ┌─────────────────────────────────────────────────────┐
-│                    Browser (Client)                  │
-│  ┌─────────────┐  ┌──────────┐  ┌────────────────┐ │
-│  │  Next.js 16  │  │  Zustand  │  │ @dnd-kit DnD   │ │
-│  │  App Router  │  │  Stores   │  │ Drag & Drop    │ │
-│  └──────┬───────┘  └────┬─────┘  └────────────────┘ │
-│         │               │                            │
-│         └───────┬───────┘                            │
-│                 │ Axios                              │
-└─────────────────┼────────────────────────────────────┘
+│                    Browser (Client)                 │
+│  ┌─────────────┐ ┌──────────┐  ┌────────────────┐   │
+│  │  Next.js 16 │ │  Zustand │  │ @dnd-kit DnD   │   │
+│  │  App Router │ │  Stores  │  │ Drag & Drop    │   │
+│  └──────┬──────┘ └────┬─────┘  └────────────────┘   │
+│         │             │                             │
+│         └───────┬─────┘                             │
+│                 │ Axios                             │
+└─────────────────┼───────────────────────────────────┘
                   │ HTTP REST API
 ┌─────────────────┼────────────────────────────────────┐
 │                 ▼                                    │
-│  ┌──────────────────────────────────────┐           │
-│  │  Express.js Backend (Port 5000)       │           │
-│  │  ├── Routes (8 modules)               │           │
-│  │  ├── Controllers (business logic)     │           │
-│  │  ├── Middleware (error handler)        │           │
-│  │  └── Validation (express-validator)    │           │
-│  └──────────────┬───────────────────────┘           │
+│  ┌──────────────────────────────────────┐            │
+│  │  Express.js Backend (Port 5000)      │            │
+│  │  ├── Routes (8 modules)              │            │
+│  │  ├── Controllers (business logic)    │            │
+│  │  ├── Middleware (error handler)      │            │
+│  │  └── Validation (express-validator)  │            │
+│  └──────────────┬───────────────────────┘            │
 │                 │ Supabase Client                    │
-│  ┌──────────────▼───────────────────────┐           │
-│  │  Supabase (PostgreSQL)                │           │
-│  │  ├── 11 Tables                        │           │
-│  │  ├── Indexes for performance          │           │
-│  │  └── Cascading deletes                │           │
-│  └──────────────────────────────────────┘           │
+│  ┌──────────────▼───────────────────────┐            │
+│  │  Supabase (PostgreSQL)               │            │
+│  │  ├── 11 Tables                       │            │
+│  │  ├── Indexes for performance         │            │
+│  │  └── Cascading deletes               │            │
+│  └──────────────────────────────────────┘            │
 └──────────────────────────────────────────────────────┘
 ```
 
@@ -252,8 +252,8 @@ kanflow/
 ### 1. Clone the Repository
 
 ```bash
-git clone <repository-url>
-cd kanflow
+git clone https://github.com/HarshKuro/Scaler_SDE-Intern-Fullstack-Assignment_Trello_clone.git
+cd Scaler_SDE-Intern-Fullstack-Assignment_Trello_clone
 ```
 
 ### 2. Install Dependencies
