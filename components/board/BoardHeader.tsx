@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useRef, useEffect } from 'react';
-import { Star, Filter, MoreHorizontal, Share2, ChevronDown } from 'lucide-react';
+import { Star, Filter, MoreHorizontal, Share2, Kanban, Table, Calendar, LayoutDashboard, GanttChart, Map } from 'lucide-react';
 import { useBoardStore } from '@/stores/boardStore';
 import { useUiStore } from '@/stores/uiStore';
 import { useFilterStore } from '@/stores/filterStore';
@@ -10,12 +10,25 @@ import { cn } from '@/lib/utils';
 import toast from 'react-hot-toast';
 import type { Board, Member } from '@/types';
 
+export type BoardView = 'board' | 'table' | 'calendar' | 'dashboard' | 'timeline' | 'map';
+
+const VIEW_OPTIONS: { key: BoardView; label: string; icon: React.ReactNode }[] = [
+  { key: 'board', label: 'Board', icon: <Kanban className="w-4 h-4" /> },
+  { key: 'table', label: 'Table', icon: <Table className="w-4 h-4" /> },
+  { key: 'calendar', label: 'Calendar', icon: <Calendar className="w-4 h-4" /> },
+  { key: 'dashboard', label: 'Dashboard', icon: <LayoutDashboard className="w-4 h-4" /> },
+  { key: 'timeline', label: 'Timeline', icon: <GanttChart className="w-4 h-4" /> },
+  { key: 'map', label: 'Map', icon: <Map className="w-4 h-4" /> },
+];
+
 interface BoardHeaderProps {
   board: Board;
   members: Member[];
+  activeView: BoardView;
+  onChangeView: (view: BoardView) => void;
 }
 
-export default function BoardHeader({ board, members }: BoardHeaderProps) {
+export default function BoardHeader({ board, members, activeView, onChangeView }: BoardHeaderProps) {
   const { updateBoard } = useBoardStore();
   const { toggleFilter, toggleMenu } = useUiStore();
   const { isActive: filterActive } = useFilterStore();
@@ -102,11 +115,22 @@ export default function BoardHeader({ board, members }: BoardHeaderProps) {
           />
         </button>
 
-        <div className="hidden md:flex items-center">
-          <button className="flex items-center gap-1 h-8 px-3 rounded bg-white/10 hover:bg-white/20 text-sm text-white transition-colors">
-            <span>Board</span>
-            <ChevronDown className="w-3.5 h-3.5" />
-          </button>
+        <div className="hidden md:flex items-center gap-0.5 ml-2">
+          {VIEW_OPTIONS.map((v) => (
+            <button
+              key={v.key}
+              onClick={() => onChangeView(v.key)}
+              className={cn(
+                'flex items-center gap-1.5 h-8 px-3 rounded text-sm transition-colors',
+                activeView === v.key
+                  ? 'bg-white/20 text-white font-medium'
+                  : 'hover:bg-white/10 text-white/70'
+              )}
+            >
+              {v.icon}
+              <span className="hidden lg:inline">{v.label}</span>
+            </button>
+          ))}
         </div>
       </div>
 
