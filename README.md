@@ -410,6 +410,7 @@ Base URL: `http://localhost:5000/api`
 
 Run this SQL in the **Supabase SQL Editor** to create all tables:
 
+
 ```sql
 -- KanFlow Database Schema
 -- Run this in Supabase SQL Editor to create all tables
@@ -549,23 +550,7 @@ CREATE INDEX IF NOT EXISTS idx_activity_card_id ON activity_log(card_id);
 
 ### Entity Relationship Diagram
 
-```
-members ──────────┐
-                  │ card_members (M:N)
-boards            │
-  │               │
-  ├── lists       │
-  │     │         │
-  │     └── cards ┤
-  │          │    │
-  │          ├── card_labels ── labels (board-scoped)
-  │          ├── checklists
-  │          │     └── checklist_items
-  │          ├── comments ── members
-  │          └── attachments
-  │
-  └── activity_log
-```
+<img width="1118" height="865" alt="image" src="https://github.com/user-attachments/assets/8ed4ca68-1236-4980-9c3c-efd863cb7533" />
 
 ---
 
