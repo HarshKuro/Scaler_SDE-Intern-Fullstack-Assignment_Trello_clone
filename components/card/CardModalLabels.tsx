@@ -27,9 +27,9 @@ export default function CardModalLabels({ cardId, boardId, currentLabels, onUpda
 
   useEffect(() => {
     if (!boardId) return;
-    api.get(`/labels/boards/${boardId}/labels`).then((res) => {
+    api.get(`/boards/${boardId}/labels`).then((res) => {
       setBoardLabels(res.data.data ?? res.data);
-    });
+    }).catch(() => { /* silent */ });
   }, [boardId]);
 
   const isActive = (id: string) => currentLabels.some((l) => l.id === id);
@@ -37,9 +37,9 @@ export default function CardModalLabels({ cardId, boardId, currentLabels, onUpda
   const toggleLabel = async (labelId: string) => {
     try {
       if (isActive(labelId)) {
-        await api.delete(`/labels/cards/${cardId}/labels/${labelId}`);
+        await api.delete(`/cards/${cardId}/labels/${labelId}`);
       } else {
-        await api.post(`/labels/cards/${cardId}/labels/${labelId}`);
+        await api.post(`/cards/${cardId}/labels/${labelId}`);
       }
       onUpdate();
     } catch {
@@ -50,7 +50,7 @@ export default function CardModalLabels({ cardId, boardId, currentLabels, onUpda
   const createLabel = async () => {
     if (!newName.trim()) return;
     try {
-      const res = await api.post(`/labels/boards/${boardId}/labels`, {
+      const res = await api.post(`/boards/${boardId}/labels`, {
         name: newName.trim(),
         color: newColor,
       });

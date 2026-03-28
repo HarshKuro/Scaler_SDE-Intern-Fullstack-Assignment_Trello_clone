@@ -27,7 +27,7 @@ export default function CardAttachments({ cardId, attachments, onUpdate, addOnly
     const formData = new FormData();
     formData.append('file', file);
     try {
-      await api.post(`/attachments/cards/${cardId}/attachments`, formData, {
+      await api.post(`/cards/${cardId}/attachments`, formData, {
         headers: { 'Content-Type': 'multipart/form-data' },
       });
       onUpdate();
@@ -40,7 +40,7 @@ export default function CardAttachments({ cardId, attachments, onUpdate, addOnly
 
   const handleDelete = async (id: string) => {
     try {
-      await api.delete(`/attachments/attachments/${id}`);
+      await api.delete(`/attachments/${id}`);
       onUpdate();
     } catch {
       toast.error('Failed to delete attachment');

@@ -21,15 +21,15 @@ export default function CardComments({ cardId }: CardCommentsProps) {
   const [editText, setEditText] = useState('');
 
   useEffect(() => {
-    api.get(`/comments/cards/${cardId}/comments`).then((res) => {
+    api.get(`/cards/${cardId}/comments`).then((res) => {
       setComments(res.data.data ?? res.data);
-    });
+    }).catch(() => { /* silent */ });
   }, [cardId]);
 
   const handleAdd = async () => {
     if (!text.trim() || !currentMember) return;
     try {
-      const res = await api.post(`/comments/cards/${cardId}/comments`, {
+      const res = await api.post(`/cards/${cardId}/comments`, {
         member_id: currentMember.id,
         text: text.trim(),
       });
@@ -44,7 +44,7 @@ export default function CardComments({ cardId }: CardCommentsProps) {
   const handleUpdate = async (id: string) => {
     if (!editText.trim()) return;
     try {
-      await api.patch(`/comments/comments/${id}`, { text: editText.trim() });
+      await api.patch(`/comments/${id}`, { text: editText.trim() });
       setComments((prev) =>
         prev.map((c) => (c.id === id ? { ...c, text: editText.trim() } : c))
       );
@@ -56,7 +56,7 @@ export default function CardComments({ cardId }: CardCommentsProps) {
 
   const handleDelete = async (id: string) => {
     try {
-      await api.delete(`/comments/comments/${id}`);
+      await api.delete(`/comments/${id}`);
       setComments((prev) => prev.filter((c) => c.id !== id));
     } catch {
       toast.error('Failed to delete comment');

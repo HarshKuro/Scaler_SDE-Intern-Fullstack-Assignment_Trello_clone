@@ -24,7 +24,7 @@ export default function CardChecklist({ cardId, checklists, onUpdate, addOnly }:
   const handleCreateChecklist = async () => {
     if (!newTitle.trim()) return;
     try {
-      await api.post(`/checklists/cards/${cardId}/checklists`, {
+      await api.post(`/cards/${cardId}/checklists`, {
         title: newTitle.trim(),
       });
       setNewTitle('Checklist');
@@ -37,7 +37,7 @@ export default function CardChecklist({ cardId, checklists, onUpdate, addOnly }:
 
   const handleDeleteChecklist = async (checklistId: string) => {
     try {
-      await api.delete(`/checklists/checklists/${checklistId}`);
+      await api.delete(`/checklists/${checklistId}`);
       onUpdate();
     } catch {
       toast.error('Failed to delete checklist');
@@ -47,7 +47,7 @@ export default function CardChecklist({ cardId, checklists, onUpdate, addOnly }:
   const handleAddItem = async (checklistId: string) => {
     if (!itemTitle.trim()) return;
     try {
-      await api.post(`/checklists/checklists/${checklistId}/items`, {
+      await api.post(`/checklists/${checklistId}/items`, {
         title: itemTitle.trim(),
       });
       setItemTitle('');
@@ -59,7 +59,7 @@ export default function CardChecklist({ cardId, checklists, onUpdate, addOnly }:
 
   const handleToggleItem = async (item: ChecklistItem) => {
     try {
-      await api.patch(`/checklists/checklist-items/${item.id}`, {
+      await api.patch(`/checklist-items/${item.id}`, {
         is_checked: !item.is_checked,
       });
       onUpdate();
@@ -70,7 +70,7 @@ export default function CardChecklist({ cardId, checklists, onUpdate, addOnly }:
 
   const handleDeleteItem = async (itemId: string) => {
     try {
-      await api.delete(`/checklists/checklist-items/${itemId}`);
+      await api.delete(`/checklist-items/${itemId}`);
       onUpdate();
     } catch {
       toast.error('Failed to delete item');

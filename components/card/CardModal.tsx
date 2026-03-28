@@ -8,6 +8,7 @@ import {
   AlignLeft,
   Clock,
   Trash2,
+  Archive,
 } from 'lucide-react';
 import { useUiStore } from '@/stores/uiStore';
 import { useCardStore } from '@/stores/cardStore';
@@ -96,6 +97,24 @@ export default function CardModal() {
       toast.success('Card deleted');
     } catch {
       toast.error('Failed to delete card');
+    }
+  };
+
+  const handleArchive = async () => {
+    if (!card) return;
+    try {
+      await updateCard(card.id, { is_archived: true });
+      // Remove from the local list so it disappears from the board
+      const { cardsByList, setCardsByList } = useCardStore.getState();
+      const listCards = cardsByList[card.list_id] ?? [];
+      setCardsByList({
+        ...cardsByList,
+        [card.list_id]: listCards.filter((c) => c.id !== card.id),
+      });
+      setActiveCard(null);
+      toast.success('Card archived');
+    } catch {
+      toast.error('Failed to archive card');
     }
   };
 
@@ -350,6 +369,13 @@ export default function CardModal() {
 
                   <div className="pt-4 space-y-2">
                     <p className="text-xs font-semibold text-trello-muted">Actions</p>
+                    <button
+                      onClick={handleArchive}
+                      className="flex items-center gap-2 w-full px-3 py-1.5 rounded bg-white/5 hover:bg-white/10 text-sm text-trello-muted transition-colors"
+                    >
+                      <Archive className="w-4 h-4" />
+                      Archive
+                    </button>
                     <button
                       onClick={handleDelete}
                       className="flex items-center gap-2 w-full px-3 py-1.5 rounded bg-white/5 hover:bg-red-500/20 text-sm text-trello-muted hover:text-red-400 transition-colors"
