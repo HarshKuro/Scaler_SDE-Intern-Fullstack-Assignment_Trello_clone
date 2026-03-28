@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useRef, useEffect } from 'react';
-import { Star, Filter, MoreHorizontal, Share2, Kanban, Table, Calendar, LayoutDashboard, GanttChart, Map } from 'lucide-react';
+import { Star, Filter, MoreHorizontal, Share2, Kanban, Table, Calendar, LayoutDashboard, GanttChart, Map, Link2, Check, Copy } from 'lucide-react';
 import { useBoardStore } from '@/stores/boardStore';
 import { useUiStore } from '@/stores/uiStore';
 import { useFilterStore } from '@/stores/filterStore';
@@ -35,6 +35,9 @@ export default function BoardHeader({ board, members, activeView, onChangeView }
   const [editingTitle, setEditingTitle] = useState(false);
   const [title, setTitle] = useState(board.title);
   const [prevBoardTitle, setPrevBoardTitle] = useState(board.title);
+  const [shareOpen, setShareOpen] = useState(false);
+  const [copied, setCopied] = useState(false);
+  const shareRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   if (board.title !== prevBoardTitle) {
     setPrevBoardTitle(board.title);
@@ -71,6 +74,28 @@ export default function BoardHeader({ board, members, activeView, onChangeView }
       toast.error('Failed to update board');
     }
   };
+
+  const handleCopyLink = async () => {
+    try {
+      await navigator.clipboard.writeText(window.location.href);
+      setCopied(true);
+      toast.success('Board link copied!');
+      setTimeout(() => setCopied(false), 2000);
+    } catch {
+      toast.error('Failed to copy link');
+    }
+  };
+
+  // Close share dropdown on outside click
+  useEffect(() => {
+    const handler = (e: MouseEvent) => {
+      if (shareRef.current && !shareRef.current.contains(e.target as Node)) {
+        setShareOpen(false);
+      }
+    };
+    if (shareOpen) document.addEventListener('mousedown', handler);
+    return () => document.removeEventListener('mousedown', handler);
+  }, [shareOpen]);
 
   return (
     <div data-tour="board-header" className="h-[52px] bg-black/30 backdrop-blur-sm flex items-center px-4 gap-2 shrink-0">
@@ -168,10 +193,53 @@ export default function BoardHeader({ board, members, activeView, onChangeView }
           <span className="hidden sm:inline">Filter</span>
         </button>
 
-        <button className="hidden sm:flex items-center gap-1.5 h-8 px-3 rounded bg-white/10 hover:bg-white/20 text-sm text-white transition-colors">
-          <Share2 className="w-4 h-4" />
-          Share
-        </button>
+        <div ref={shareRef} className="relative hidden sm:block">
+          <button
+            onClick={() => setShareOpen(!shareOpen)}
+            className="flex items-center gap-1.5 h-8 px-3 rounded bg-white/10 hover:bg-white/20 text-sm text-white transition-colors"
+          >
+            <Share2 className="w-4 h-4" />
+            Share
+          </button>
+          {shareOpen && (
+            <div className="absolute top-full mt-2 right-0 w-[320px] bg-trello-surface border border-trello-border rounded-lg shadow-xl z-[100]">
+              <div className="flex items-center justify-between p-3 border-b border-trello-border">
+                <span className="text-sm font-semibold text-trello-text">Share board</span>
+                <button onClick={() => setShareOpen(false)} className="p-0.5 rounded hover:bg-white/10">
+                  <MoreHorizontal className="w-4 h-4 text-trello-text-subtle rotate-90" />
+                </button>
+              </div>
+              <div className="p-3 space-y-3">
+                {/* Board members */}
+                <div>
+                  <p className="text-xs font-semibold text-trello-text-secondary mb-2">Board members</p>
+                  <div className="space-y-2">
+                    {members.map((m) => (
+                      <div key={m.id} className="flex items-center gap-2">
+                        <Avatar initials={m.initials} color={m.avatar_color} size="sm" />
+                        <div className="min-w-0 flex-1">
+                          <p className="text-sm text-trello-text-bright truncate">{m.full_name}</p>
+                          <p className="text-xs text-trello-text-subtle truncate">{m.email}</p>
+                        </div>
+                        <span className="text-xs text-trello-text-secondary bg-white/5 px-2 py-0.5 rounded">Member</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+                {/* Copy link */}
+                <div className="border-t border-trello-border pt-3">
+                  <button
+                    onClick={handleCopyLink}
+                    className="w-full flex items-center gap-2 px-3 py-2 rounded hover:bg-white/10 transition-colors text-sm text-trello-text"
+                  >
+                    {copied ? <Check className="w-4 h-4 text-green-400" /> : <Link2 className="w-4 h-4" />}
+                    {copied ? 'Link copied!' : 'Copy board link'}
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
 
         <button
           onClick={toggleMenu}
