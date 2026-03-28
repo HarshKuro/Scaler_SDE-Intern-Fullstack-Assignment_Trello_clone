@@ -5,6 +5,7 @@ import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable';
 import { useDroppable } from '@dnd-kit/core';
+import { ChevronsRight, Plus } from 'lucide-react';
 import ListHeader from './ListHeader';
 import AddCardButton from './AddCardButton';
 import CardItem from '@/components/card/CardItem';
@@ -48,25 +49,24 @@ export default function ListColumn({ list, cards }: ListColumnProps) {
         ref={setSortableRef}
         style={style}
         className={cn(
-          'w-10 shrink-0 flex flex-col bg-trello-list rounded-xl cursor-pointer group',
-          'hover:bg-white/10 transition-colors max-h-[calc(100vh-120px)]',
+          'w-[272px] shrink-0 bg-trello-list rounded-xl',
           isDragging && 'list-dragging'
         )}
-        onClick={() => setCollapsed(false)}
-        title={`${list.title} (${cards.length})`}
       >
-        <div {...attributes} {...listeners} className="cursor-grab active:cursor-grabbing p-2 flex-1 flex flex-col items-center gap-2">
-          <div className="w-6 h-6 rounded bg-white/10 flex items-center justify-center text-[10px] text-trello-text-secondary font-bold">
-            {cards.length}
-          </div>
-          <div className="flex-1 flex items-start">
-            <span
-              className="text-sm font-semibold text-trello-text whitespace-nowrap origin-top-left"
-              style={{ writingMode: 'vertical-rl', textOrientation: 'mixed' }}
-            >
-              {list.title}
-            </span>
-          </div>
+        {/* Collapsed header */}
+        <div {...attributes} {...listeners} className="cursor-grab active:cursor-grabbing">
+          <ListHeader
+            listId={list.id}
+            title={list.title}
+            cardCount={cards.length}
+            collapsed
+            onExpand={() => setCollapsed(false)}
+          />
+        </div>
+
+        {/* Compact add card row */}
+        <div className="px-2 pb-2">
+          <AddCardButton listId={list.id} cardCount={cards.length} />
         </div>
       </div>
     );
