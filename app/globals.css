@@ -1,0 +1,103 @@
+@import "tailwindcss";
+
+@theme inline {
+  --color-trello-bg: #1d2125;
+  --color-trello-bg-light: #282e33;
+  --color-trello-sidebar: #1d2125;
+  --color-trello-navbar: #1d2125;
+  --color-trello-list: #101204;
+  --color-trello-card: #22272b;
+  --color-trello-card-hover: #2c333a;
+  --color-trello-blue: #0c66e4;
+  --color-trello-blue-brand: #0079bf;
+  --color-trello-green: #61bd4f;
+  --color-trello-red: #eb5a46;
+  --color-trello-yellow: #f2d600;
+  --color-trello-orange: #ff9f1a;
+  --color-trello-purple: #c377e0;
+  --color-trello-text: #b6c2cf;
+  --color-trello-text-secondary: #9fadbc;
+  --color-trello-text-bright: #dee4ea;
+  --color-trello-text-subtle: #8c9bab;
+  --color-trello-border: rgba(255, 255, 255, 0.1);
+  --color-trello-btn: #a6c5e229;
+  --color-trello-overlay: rgba(0, 0, 0, 0.6);
+  --color-trello-surface: #282e33;
+  --color-trello-hover: #333c43;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  height: 100%;
+}
+
+body {
+  min-height: 100%;
+  margin: 0;
+  background: var(--color-trello-bg);
+  color: var(--color-trello-text);
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+    "Noto Sans", Ubuntu, "Droid Sans", "Helvetica Neue", sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Scrollbar styling */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.3);
+}
+
+/* react-day-picker dark theme */
+.rdp-trello .rdp-root {
+  --rdp-accent-color: #579dff;
+  --rdp-accent-background-color: #579dff33;
+  --rdp-day-height: 32px;
+  --rdp-day-width: 32px;
+  color: #b6c2cf;
+}
+
+.rdp-trello .rdp-root button {
+  color: #b6c2cf;
+  border-radius: 4px;
+}
+
+.rdp-trello .rdp-root button:hover {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.custom-scrollbar::-webkit-scrollbar {
+  width: 6px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.15);
+  border-radius: 3px;
+}
+
+/* Responsive drawer panels */
+@media (max-width: 640px) {
+  .fixed.w-\[340px\] {
+    width: 100vw;
+  }
+}
