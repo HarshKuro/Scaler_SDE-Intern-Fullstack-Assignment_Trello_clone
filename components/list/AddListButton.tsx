@@ -41,6 +41,7 @@ export default function AddListButton({ boardId, listsCount }: AddListButtonProp
     return (
       <button
         onClick={() => setAdding(true)}
+        data-tour="add-list"
         className="w-[272px] shrink-0 h-11 flex items-center gap-2 px-4 rounded-xl bg-white/10 hover:bg-white/20 text-sm text-white/80 transition-colors"
       >
         <Plus className="w-4 h-4" />

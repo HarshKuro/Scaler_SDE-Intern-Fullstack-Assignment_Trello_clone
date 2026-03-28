@@ -41,6 +41,7 @@ export default function AddCardButton({ listId, cardCount }: AddCardButtonProps)
     return (
       <button
         onClick={() => setAdding(true)}
+        data-tour="add-card"
         className="flex items-center gap-2 w-full px-2 py-1.5 rounded-lg text-sm text-trello-muted hover:bg-white/10 hover:text-trello-text transition-colors"
       >
         <Plus className="w-4 h-4" />

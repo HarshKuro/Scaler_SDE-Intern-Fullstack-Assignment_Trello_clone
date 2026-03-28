@@ -9,9 +9,9 @@ import { useMemberStore } from '@/stores/memberStore';
 import BoardHeader from '@/components/board/BoardHeader';
 import ListColumn from '@/components/list/ListColumn';
 import AddListButton from '@/components/list/AddListButton';
-import { DndContext, DragOverlay, closestCorners, PointerSensor, useSensor, useSensors, type DragStartEvent, type DragEndEvent, type DragOverEvent } from '@dnd-kit/core';
+import { DndContext, DragOverlay, closestCorners, PointerSensor, useSensor, useSensors, type DragStartEvent, type DragEndEvent, type DragOverEvent, MeasuringStrategy } from '@dnd-kit/core';
 import { SortableContext, horizontalListSortingStrategy } from '@dnd-kit/sortable';
-import type { Card } from '@/types';
+import type { Card, List } from '@/types';
 import CardModal from '@/components/card/CardModal';
 import FilterPanel from '@/components/board/FilterPanel';
 import BoardMenuDrawer from '@/components/board/BoardMenuDrawer';
@@ -28,6 +28,7 @@ export default function BoardPage() {
   const { members, fetchMembers } = useMemberStore();
 
   const [activeCard, setActiveCard] = useState<Card | null>(null);
+  const [activeList, setActiveList] = useState<List | null>(null);
 
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 5 } })
@@ -65,6 +66,8 @@ export default function BoardPage() {
 
     if (type === 'card') {
       setActiveCard(active.data.current?.card);
+    } else if (type === 'list') {
+      setActiveList(active.data.current?.list);
     }
   };
 
@@ -109,6 +112,7 @@ export default function BoardPage() {
   const handleDragEnd = async (event: DragEndEvent) => {
     const { active, over } = event;
     setActiveCard(null);
+    setActiveList(null);
 
     if (!over || active.id === over.id) return;
 
@@ -164,6 +168,12 @@ export default function BoardPage() {
     ? { background: currentBoard.background }
     : { backgroundColor: currentBoard.background };
 
+  const measuring = {
+    droppable: {
+      strategy: MeasuringStrategy.Always,
+    },
+  };
+
   return (
     <div className="h-screen flex flex-col" style={bgStyle}>
       <BoardHeader board={currentBoard} members={members} />
@@ -171,6 +181,7 @@ export default function BoardPage() {
       <DndContext
         sensors={sensors}
         collisionDetection={closestCorners}
+        measuring={measuring}
         onDragStart={handleDragStart}
         onDragOver={handleDragOver}
         onDragEnd={handleDragEnd}
@@ -195,10 +206,37 @@ export default function BoardPage() {
           </div>
         </div>
 
-        <DragOverlay>
+        <DragOverlay dropAnimation={{
+          duration: 300,
+          easing: 'cubic-bezier(0.22, 1, 0.36, 1)',
+        }}>
           {activeCard && (
-            <div className="bg-trello-card rounded-lg p-2 shadow-xl opacity-90 w-[248px] rotate-3">
-              <p className="text-sm text-trello-text">{activeCard.title}</p>
+            <div className="drag-overlay-card bg-trello-card rounded-lg w-[248px]">
+              {activeCard.cover_color && (
+                <div className="h-8 rounded-t-lg" style={{ backgroundColor: activeCard.cover_color }} />
+              )}
+              <div className="p-2">
+                <p className="text-sm text-trello-text">{activeCard.title}</p>
+              </div>
+            </div>
+          )}
+          {activeList && (
+            <div className="drag-overlay-list w-[272px] bg-trello-list rounded-xl p-2 max-h-[400px] overflow-hidden">
+              <div className="px-2 pt-1 pb-2">
+                <h3 className="text-sm font-semibold text-trello-text">{activeList.title}</h3>
+              </div>
+              <div className="space-y-1.5 px-1">
+                {(cardsByList[activeList.id] ?? []).slice(0, 3).map((c) => (
+                  <div key={c.id} className="bg-trello-card rounded-lg p-2 shadow-sm">
+                    <p className="text-sm text-trello-text">{c.title}</p>
+                  </div>
+                ))}
+                {(cardsByList[activeList.id]?.length ?? 0) > 3 && (
+                  <p className="text-xs text-trello-text-subtle px-2 pb-1">
+                    +{(cardsByList[activeList.id]?.length ?? 0) - 3} more cards
+                  </p>
+                )}
+              </div>
             </div>
           )}
         </DragOverlay>

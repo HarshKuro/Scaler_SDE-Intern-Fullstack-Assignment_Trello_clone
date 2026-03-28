@@ -16,7 +16,7 @@ export default function BoardList({ boards, title }: BoardListProps) {
   return (
     <div>
       <h3 className="text-sm font-semibold text-trello-text-bright mb-3">{title}</h3>
-      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
+      <div data-tour="board-list" className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
         {boards.map((board) => (
           <BoardCard key={board.id} board={board} />
         ))}

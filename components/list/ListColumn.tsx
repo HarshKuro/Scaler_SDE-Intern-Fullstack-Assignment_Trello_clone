@@ -8,6 +8,7 @@ import ListHeader from './ListHeader';
 import AddCardButton from './AddCardButton';
 import CardItem from '@/components/card/CardItem';
 import type { List, Card } from '@/types';
+import { cn } from '@/lib/utils';
 
 interface ListColumnProps {
   list: List;
@@ -35,17 +36,20 @@ export default function ListColumn({ list, cards }: ListColumnProps) {
 
   const style = {
     transform: CSS.Transform.toString(transform),
-    transition,
-    opacity: isDragging ? 0.5 : 1,
+    transition: transition ?? 'transform 250ms cubic-bezier(0.25, 1, 0.5, 1)',
   };
 
   return (
     <div
       ref={setSortableRef}
       style={style}
-      className="w-[272px] shrink-0 flex flex-col bg-trello-list rounded-xl max-h-[calc(100vh-120px)]"
+      data-tour="list-column"
+      className={cn(
+        'w-[272px] shrink-0 flex flex-col bg-trello-list rounded-xl max-h-[calc(100vh-120px)]',
+        isDragging && 'list-dragging'
+      )}
     >
-      <div {...attributes} {...listeners} className="cursor-grab active:cursor-grabbing">
+      <div {...attributes} {...listeners} data-tour="list-header" className="cursor-grab active:cursor-grabbing">
         <ListHeader listId={list.id} title={list.title} cardCount={cards.length} />
       </div>
 

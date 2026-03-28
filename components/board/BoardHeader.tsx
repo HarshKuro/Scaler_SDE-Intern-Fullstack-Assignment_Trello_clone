@@ -60,7 +60,7 @@ export default function BoardHeader({ board, members }: BoardHeaderProps) {
   };
 
   return (
-    <div className="h-[52px] bg-black/30 backdrop-blur-sm flex items-center px-4 gap-2 shrink-0">
+    <div data-tour="board-header" className="h-[52px] bg-black/30 backdrop-blur-sm flex items-center px-4 gap-2 shrink-0">
       {/* Left section */}
       <div className="flex items-center gap-2 min-w-0 flex-1">
         {editingTitle ? (
@@ -89,6 +89,7 @@ export default function BoardHeader({ board, members }: BoardHeaderProps) {
 
         <button
           onClick={handleStar}
+          data-tour="board-star"
           className="p-1.5 rounded hover:bg-white/20 transition-colors shrink-0"
         >
           <Star
@@ -131,6 +132,7 @@ export default function BoardHeader({ board, members }: BoardHeaderProps) {
 
         <button
           onClick={toggleFilter}
+          data-tour="board-filter"
           className={cn(
             'flex items-center gap-1.5 h-8 px-3 rounded text-sm text-white transition-colors',
             filterActive
@@ -149,6 +151,7 @@ export default function BoardHeader({ board, members }: BoardHeaderProps) {
 
         <button
           onClick={toggleMenu}
+          data-tour="board-menu"
           className="p-1.5 rounded hover:bg-white/20 transition-colors"
         >
           <MoreHorizontal className="w-5 h-5 text-white" />

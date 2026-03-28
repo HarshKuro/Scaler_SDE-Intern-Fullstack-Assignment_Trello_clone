@@ -31,8 +31,7 @@ export default function CardItem({ card, listId }: CardItemProps) {
 
   const style = {
     transform: CSS.Transform.toString(transform),
-    transition,
-    opacity: isDragging ? 0.4 : 1,
+    transition: transition ?? 'transform 250ms cubic-bezier(0.25, 1, 0.5, 1)',
   };
 
   const dueStatus = card.due_date ? getDueDateStatus(card.due_date, card.is_complete) : null;
@@ -54,7 +53,11 @@ export default function CardItem({ card, listId }: CardItemProps) {
       {...attributes}
       {...listeners}
       onClick={() => setActiveCard(card.id)}
-      className="group bg-trello-card hover:outline hover:outline-2 hover:outline-trello-blue rounded-lg shadow-sm cursor-pointer mb-1.5 mx-0.5 transition-colors"
+      data-tour="card-item"
+      className={cn(
+        'group bg-trello-card hover:outline hover:outline-2 hover:outline-trello-blue rounded-lg shadow-sm cursor-pointer mb-1.5 mx-0.5 card-sortable',
+        isDragging && 'card-dragging'
+      )}
     >
       {/* Cover image */}
       {card.cover_color && (

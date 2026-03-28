@@ -15,6 +15,7 @@ export default function Sidebar({ className }: SidebarProps) {
 
   return (
     <aside
+      data-tour="sidebar"
       className={cn(
         'w-64 bg-trello-sidebar border-r border-trello-border flex flex-col py-3 shrink-0 overflow-y-auto',
         className

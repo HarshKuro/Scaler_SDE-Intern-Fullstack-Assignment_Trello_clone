@@ -45,7 +45,189 @@ body {
   -moz-osx-font-smoothing: grayscale;
 }
 
-/* Scrollbar styling */
+/* ─── Drag & Drop Animations ─── */
+
+/* Card being dragged — ghost placeholder */
+.card-dragging {
+  opacity: 0;
+  transform: scale(0.95);
+  transition: opacity 200ms ease, transform 200ms ease;
+}
+
+/* Drag overlay — floating card */
+.drag-overlay-card {
+  animation: card-pickup 200ms cubic-bezier(0.18, 0.67, 0.6, 1.22);
+  box-shadow:
+    0 15px 50px rgba(0, 0, 0, 0.35),
+    0 5px 15px rgba(0, 0, 0, 0.2);
+  transform: rotate(3deg) scale(1.05);
+  pointer-events: none;
+}
+
+@keyframes card-pickup {
+  0% {
+    transform: rotate(0deg) scale(1);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  }
+  50% {
+    transform: rotate(4deg) scale(1.08);
+  }
+  100% {
+    transform: rotate(3deg) scale(1.05);
+    box-shadow:
+      0 15px 50px rgba(0, 0, 0, 0.35),
+      0 5px 15px rgba(0, 0, 0, 0.2);
+  }
+}
+
+/* Smooth transition for cards shifting in lists */
+.card-sortable {
+  transition: transform 250ms cubic-bezier(0.25, 1, 0.5, 1);
+}
+
+/* Drop location indicator */
+.drop-placeholder {
+  background: rgba(255, 255, 255, 0.06);
+  border: 2px dashed rgba(255, 255, 255, 0.15);
+  border-radius: 8px;
+  min-height: 40px;
+  margin: 2px;
+  animation: placeholder-pulse 1.5s ease-in-out infinite;
+}
+
+@keyframes placeholder-pulse {
+  0%, 100% { opacity: 0.4; }
+  50% { opacity: 0.8; }
+}
+
+/* List being dragged */
+.list-dragging {
+  opacity: 0.3;
+  transform: scale(0.98);
+  transition: opacity 200ms ease, transform 200ms ease;
+}
+
+.drag-overlay-list {
+  animation: list-pickup 250ms cubic-bezier(0.18, 0.67, 0.6, 1.22);
+  box-shadow:
+    0 20px 60px rgba(0, 0, 0, 0.4),
+    0 8px 20px rgba(0, 0, 0, 0.25);
+  transform: rotate(2deg) scale(1.02);
+}
+
+@keyframes list-pickup {
+  0% {
+    transform: rotate(0deg) scale(1);
+    box-shadow: none;
+  }
+  100% {
+    transform: rotate(2deg) scale(1.02);
+    box-shadow:
+      0 20px 60px rgba(0, 0, 0, 0.4),
+      0 8px 20px rgba(0, 0, 0, 0.25);
+  }
+}
+
+/* Card drop animation */
+@keyframes card-drop {
+  0% {
+    transform: scale(1.05) rotate(3deg);
+    box-shadow: 0 15px 50px rgba(0, 0, 0, 0.35);
+  }
+  60% {
+    transform: scale(0.98) rotate(0deg);
+  }
+  100% {
+    transform: scale(1) rotate(0deg);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  }
+}
+
+.card-just-dropped {
+  animation: card-drop 300ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+/* ─── driver.js Tour Overrides ─── */
+
+.driver-popover {
+  background: #282e33 !important;
+  border: 1px solid rgba(255, 255, 255, 0.1) !important;
+  border-radius: 12px !important;
+  color: #b6c2cf !important;
+  box-shadow: 0 25px 60px rgba(0, 0, 0, 0.5) !important;
+  max-width: 400px !important;
+}
+
+.driver-popover .driver-popover-title {
+  color: #dee4ea !important;
+  font-size: 16px !important;
+  font-weight: 700 !important;
+  font-family: inherit !important;
+}
+
+.driver-popover .driver-popover-description {
+  color: #9fadbc !important;
+  font-size: 13px !important;
+  line-height: 1.6 !important;
+  font-family: inherit !important;
+}
+
+.driver-popover .driver-popover-progress-text {
+  color: #8c9bab !important;
+  font-size: 12px !important;
+}
+
+.driver-popover .driver-popover-prev-btn {
+  background: rgba(255, 255, 255, 0.08) !important;
+  color: #b6c2cf !important;
+  border: 1px solid rgba(255, 255, 255, 0.1) !important;
+  border-radius: 6px !important;
+  padding: 6px 14px !important;
+  font-size: 13px !important;
+  font-weight: 500 !important;
+  text-shadow: none !important;
+}
+
+.driver-popover .driver-popover-prev-btn:hover {
+  background: rgba(255, 255, 255, 0.15) !important;
+}
+
+.driver-popover .driver-popover-next-btn,
+.driver-popover .driver-popover-close-btn-custom {
+  background: #0c66e4 !important;
+  color: white !important;
+  border: none !important;
+  border-radius: 6px !important;
+  padding: 6px 14px !important;
+  font-size: 13px !important;
+  font-weight: 500 !important;
+  text-shadow: none !important;
+}
+
+.driver-popover .driver-popover-next-btn:hover {
+  background: #0052cc !important;
+}
+
+.driver-popover .driver-popover-arrow-side-left.driver-popover-arrow,
+.driver-popover .driver-popover-arrow-side-right.driver-popover-arrow,
+.driver-popover .driver-popover-arrow-side-top.driver-popover-arrow,
+.driver-popover .driver-popover-arrow-side-bottom.driver-popover-arrow {
+  border-color: #282e33 !important;
+}
+
+.driver-popover .driver-popover-close-btn {
+  color: #8c9bab !important;
+}
+
+.driver-popover .driver-popover-close-btn:hover {
+  color: #dee4ea !important;
+}
+
+.driver-overlay {
+  opacity: 0.7 !important;
+}
+
+/* ─── Scrollbar styling ─── */
 ::-webkit-scrollbar {
   width: 8px;
   height: 8px;
