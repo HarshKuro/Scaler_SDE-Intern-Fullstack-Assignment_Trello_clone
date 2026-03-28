@@ -6,6 +6,7 @@ import { useBoardStore } from '@/stores/boardStore';
 import { useListStore } from '@/stores/listStore';
 import { useCardStore } from '@/stores/cardStore';
 import { useMemberStore } from '@/stores/memberStore';
+import Navbar from '@/components/layout/Navbar';
 import BoardHeader from '@/components/board/BoardHeader';
 import ListColumn from '@/components/list/ListColumn';
 import AddListButton from '@/components/list/AddListButton';
@@ -144,6 +145,7 @@ export default function BoardPage() {
         className="h-screen flex flex-col"
         style={{ background: '#1d2125' }}
       >
+        <Navbar />
         {/* Skeleton header */}
         <div className="h-[52px] bg-black/30 flex items-center px-4 gap-4">
           <div className="h-6 w-40 bg-white/10 rounded animate-pulse" />
@@ -176,6 +178,7 @@ export default function BoardPage() {
 
   return (
     <div className="h-screen flex flex-col" style={bgStyle}>
+      <Navbar />
       <BoardHeader board={currentBoard} members={members} />
 
       <DndContext
