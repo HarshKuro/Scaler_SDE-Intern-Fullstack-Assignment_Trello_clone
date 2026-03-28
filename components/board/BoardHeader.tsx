@@ -1,11 +1,10 @@
 'use client';
 
 import { useState, useRef, useEffect } from 'react';
-import { Star, Filter, MoreHorizontal, Share2, ChevronDown, Compass } from 'lucide-react';
+import { Star, Filter, MoreHorizontal, Share2, ChevronDown } from 'lucide-react';
 import { useBoardStore } from '@/stores/boardStore';
 import { useUiStore } from '@/stores/uiStore';
 import { useFilterStore } from '@/stores/filterStore';
-import { useGuidedTour } from '@/components/tour/GuidedTour';
 import Avatar from '@/components/ui/Avatar';
 import { cn } from '@/lib/utils';
 import toast from 'react-hot-toast';
@@ -20,7 +19,6 @@ export default function BoardHeader({ board, members }: BoardHeaderProps) {
   const { updateBoard } = useBoardStore();
   const { toggleFilter, toggleMenu } = useUiStore();
   const { isActive: filterActive } = useFilterStore();
-  const { startBoardTour } = useGuidedTour();
   const [editingTitle, setEditingTitle] = useState(false);
   const [title, setTitle] = useState(board.title);
   const [prevBoardTitle, setPrevBoardTitle] = useState(board.title);
@@ -157,15 +155,6 @@ export default function BoardHeader({ board, members }: BoardHeaderProps) {
           className="p-1.5 rounded hover:bg-white/20 transition-colors"
         >
           <MoreHorizontal className="w-5 h-5 text-white" />
-        </button>
-
-        <button
-          onClick={startBoardTour}
-          className="p-1.5 rounded hover:bg-white/20 transition-colors"
-          title="Start guided tour"
-          data-tour="tour-btn"
-        >
-          <Compass className="w-5 h-5 text-white" />
         </button>
       </div>
     </div>
