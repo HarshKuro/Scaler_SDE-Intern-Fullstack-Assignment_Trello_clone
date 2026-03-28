@@ -1,22 +1,25 @@
 'use client';
 
 import { useState, useRef, useEffect, useCallback } from 'react';
+import { useRouter } from 'next/navigation';
 import { Search, X } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import api from '@/lib/api';
+import { useUiStore } from '@/stores/uiStore';
 import type { Card } from '@/types';
 
-interface SearchBarProps {
-  boardId?: string;
-}
+type SearchCard = Card & { board_id?: string; lists?: { title: string } };
 
-export default function SearchBar({ boardId }: SearchBarProps) {
+export default function SearchBar() {
   const [isOpen, setIsOpen] = useState(false);
   const [query, setQuery] = useState('');
-  const [results, setResults] = useState<Card[]>([]);
+  const [results, setResults] = useState<SearchCard[]>([]);
   const [loading, setLoading] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
   const debounceRef = useRef<ReturnType<typeof setTimeout>>(undefined);
+  const router = useRouter();
+  const { setActiveCard } = useUiStore();
 
   const search = useCallback(async (q: string) => {
     if (!q.trim()) {
@@ -26,7 +29,6 @@ export default function SearchBar({ boardId }: SearchBarProps) {
     setLoading(true);
     try {
       const params = new URLSearchParams({ q });
-      if (boardId) params.set('board_id', boardId);
       const { data: res } = await api.get(`/cards/search?${params}`);
       setResults(res.data || []);
     } catch {
@@ -34,7 +36,7 @@ export default function SearchBar({ boardId }: SearchBarProps) {
     } finally {
       setLoading(false);
     }
-  }, [boardId]);
+  }, []);
 
   useEffect(() => {
     if (debounceRef.current) clearTimeout(debounceRef.current);
@@ -50,18 +52,43 @@ export default function SearchBar({ boardId }: SearchBarProps) {
     }
   }, [isOpen]);
 
+  // Close on outside click
+  useEffect(() => {
+    const handler = (e: MouseEvent) => {
+      if (containerRef.current && !containerRef.current.contains(e.target as Node)) {
+        setIsOpen(false);
+        setQuery('');
+        setResults([]);
+      }
+    };
+    if (isOpen) document.addEventListener('mousedown', handler);
+    return () => document.removeEventListener('mousedown', handler);
+  }, [isOpen]);
+
+  const handleResultClick = (card: SearchCard) => {
+    setIsOpen(false);
+    setQuery('');
+    setResults([]);
+    // Navigate to board and open card
+    if (card.board_id) {
+      router.push(`/board/${card.board_id}`);
+      // Slight delay to let the board page mount before opening card modal
+      setTimeout(() => setActiveCard(card.id), 500);
+    }
+  };
+
   return (
-    <div className="relative">
-      <button
-        onClick={() => setIsOpen(true)}
+    <div className="relative" ref={containerRef}>
+      <div
+        onClick={() => !isOpen && setIsOpen(true)}
         className={cn(
-          'flex items-center gap-1 px-3 h-8 rounded text-sm transition-all',
+          'flex items-center gap-1 px-3 h-8 rounded text-sm transition-all cursor-text',
           isOpen
             ? 'bg-white/20 w-64'
             : 'bg-white/10 hover:bg-white/20 w-40'
         )}
       >
-        <Search className="w-4 h-4 shrink-0" />
+        <Search className="w-4 h-4 shrink-0 text-trello-text" />
         {isOpen ? (
           <input
             ref={inputRef}
@@ -69,7 +96,7 @@ export default function SearchBar({ boardId }: SearchBarProps) {
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             placeholder="Search cards..."
-            className="bg-transparent outline-none w-full text-trello-text placeholder:text-trello-text-secondary"
+            className="bg-transparent outline-none w-full text-trello-text placeholder:text-trello-text-secondary text-sm"
             onKeyDown={(e) => {
               if (e.key === 'Escape') {
                 setIsOpen(false);
@@ -79,7 +106,7 @@ export default function SearchBar({ boardId }: SearchBarProps) {
             }}
           />
         ) : (
-          <span className="text-trello-text-secondary">Search</span>
+          <span className="text-trello-text-secondary select-none">Search</span>
         )}
         {isOpen && (
           <button
@@ -89,33 +116,33 @@ export default function SearchBar({ boardId }: SearchBarProps) {
               setQuery('');
               setResults([]);
             }}
-            className="shrink-0 hover:text-white"
+            className="shrink-0 hover:text-white text-trello-text"
           >
             <X className="w-4 h-4" />
           </button>
         )}
-      </button>
+      </div>
 
       {isOpen && (query || results.length > 0) && (
-        <div className="absolute top-full mt-1 right-0 w-80 bg-trello-bg-light border border-trello-border rounded-lg shadow-xl z-50 max-h-80 overflow-y-auto">
+        <div className="absolute top-full mt-1 right-0 w-80 bg-trello-surface border border-trello-border rounded-lg shadow-xl z-[100] max-h-80 overflow-y-auto">
           {loading ? (
             <div className="p-4 text-center text-trello-text-secondary text-sm">Searching...</div>
-          ) : results.length === 0 ? (
+          ) : results.length === 0 && query ? (
             <div className="p-4 text-center text-trello-text-secondary text-sm">No cards found</div>
           ) : (
             results.map((card) => (
-              <a
+              <button
                 key={card.id}
-                href={`#`}
-                className="block px-4 py-3 hover:bg-trello-card transition-colors border-b border-trello-border last:border-b-0"
+                onClick={() => handleResultClick(card)}
+                className="block w-full text-left px-4 py-3 hover:bg-white/10 transition-colors border-b border-trello-border last:border-b-0"
               >
                 <div className="text-sm text-trello-text-bright font-medium">{card.title}</div>
-                {(card as Card & { lists?: { title: string } }).lists && (
+                {card.lists && (
                   <div className="text-xs text-trello-text-secondary mt-1">
-                    in {(card as Card & { lists?: { title: string } }).lists?.title}
+                    in {card.lists.title}
                   </div>
                 )}
-              </a>
+              </button>
             ))
           )}
         </div>
