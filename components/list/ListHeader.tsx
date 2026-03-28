@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useRef, useEffect } from 'react';
-import { MoreHorizontal, X } from 'lucide-react';
+import { MoreHorizontal, X, Archive, Trash2 } from 'lucide-react';
 import { useListStore } from '@/stores/listStore';
 import * as Popover from '@radix-ui/react-popover';
 import toast from 'react-hot-toast';
@@ -40,6 +40,15 @@ export default function ListHeader({ listId, title, cardCount }: ListHeaderProps
       }
     } else {
       setValue(title);
+    }
+  };
+
+  const handleArchive = async () => {
+    try {
+      await updateList(listId, { is_archived: true });
+      toast.success(`"${title}" archived`);
+    } catch {
+      toast.error('Failed to archive list');
     }
   };
 
@@ -106,11 +115,20 @@ export default function ListHeader({ listId, title, cardCount }: ListHeaderProps
                 </button>
               </Popover.Close>
             </div>
-            <div className="p-2">
+            <div className="p-2 space-y-0.5">
+              <button
+                onClick={handleArchive}
+                className="w-full text-left text-sm text-trello-text hover:bg-white/10 px-3 py-1.5 rounded transition-colors flex items-center gap-2"
+              >
+                <Archive className="w-4 h-4" />
+                Archive this list
+              </button>
+              <hr className="border-trello-border my-1" />
               <button
                 onClick={handleDelete}
-                className="w-full text-left text-sm text-red-400 hover:bg-red-500/10 px-3 py-1.5 rounded transition-colors"
+                className="w-full text-left text-sm text-red-400 hover:bg-red-500/10 px-3 py-1.5 rounded transition-colors flex items-center gap-2"
               >
+                <Trash2 className="w-4 h-4" />
                 Delete this list
               </button>
             </div>

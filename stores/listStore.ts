@@ -23,9 +23,15 @@ export const useListStore = create<ListState>((set, get) => ({
 
   updateList: async (id, data) => {
     const { data: res } = await api.patch(`/lists/${id}`, data);
-    set({
-      lists: get().lists.map((l) => (l.id === id ? { ...l, ...res.data } : l)),
-    });
+    const updated = { ...get().lists.find((l) => l.id === id)!, ...res.data };
+    // Remove archived lists from view
+    if (updated.is_archived) {
+      set({ lists: get().lists.filter((l) => l.id !== id) });
+    } else {
+      set({
+        lists: get().lists.map((l) => (l.id === id ? updated : l)),
+      });
+    }
   },
 
   deleteList: async (id) => {
