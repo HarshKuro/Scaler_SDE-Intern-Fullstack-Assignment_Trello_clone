@@ -142,7 +142,7 @@ A pixel-perfect, full-stack Kanban project management tool inspired by Trello. B
 │  │  ├── Middleware (error handler)      │            │
 │  │  └── Validation (express-validator)  │            │
 │  └──────────────┬───────────────────────┘            │
-│                 │ pg (node-postgres)                  │
+│                 │ pg (node-postgres)                 │
 │  ┌──────────────▼───────────────────────┐            │
 │  │  Neon PostgreSQL                     │            │
 │  │  ├── 11 Tables                       │            │
