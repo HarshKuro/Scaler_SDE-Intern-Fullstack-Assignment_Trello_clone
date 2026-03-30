@@ -1,5 +1,5 @@
 import { Request, Response, NextFunction } from 'express';
-import { supabase } from '../db/supabase';
+import { db } from '../db';
 
 export const createList = async (req: Request, res: Response, next: NextFunction) => {
   try {
@@ -7,7 +7,7 @@ export const createList = async (req: Request, res: Response, next: NextFunction
 
     let pos = position;
     if (pos === undefined) {
-      const { data: lastList } = await supabase
+      const { data: lastList } = await db
         .from('lists')
         .select('position')
         .eq('board_id', board_id)
@@ -17,7 +17,7 @@ export const createList = async (req: Request, res: Response, next: NextFunction
       pos = lastList ? lastList.position + 1000 : 1000;
     }
 
-    const { data, error } = await supabase
+    const { data, error } = await db
       .from('lists')
       .insert({ board_id, title, position: pos })
       .select()
@@ -25,7 +25,7 @@ export const createList = async (req: Request, res: Response, next: NextFunction
 
     if (error) throw error;
 
-    await supabase.from('activity_log').insert({
+    await db.from('activity_log').insert({
       board_id,
       member_id: null,
       action: 'list_created',
@@ -43,7 +43,7 @@ export const updateList = async (req: Request, res: Response, next: NextFunction
     const { id } = req.params;
     const updates = req.body;
 
-    const { data, error } = await supabase
+    const { data, error } = await db
       .from('lists')
       .update({ ...updates, updated_at: new Date().toISOString() })
       .eq('id', id)
@@ -60,7 +60,7 @@ export const updateList = async (req: Request, res: Response, next: NextFunction
 export const deleteList = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const { id } = req.params;
-    const { error } = await supabase.from('lists').delete().eq('id', id);
+    const { error } = await db.from('lists').delete().eq('id', id);
     if (error) throw error;
     res.json({ data: { id }, error: null });
   } catch (err) {
@@ -73,10 +73,10 @@ export const reorderLists = async (req: Request, res: Response, next: NextFuncti
     const { items } = req.body;
 
     const updates = items.map((item: { id: string; position: number }) =>
-      supabase
+      db
         .from('lists')
         .update({ position: item.position, updated_at: new Date().toISOString() })
-        .eq('id', item.id)
+        .eq('id', item.id),
     );
 
     await Promise.all(updates);

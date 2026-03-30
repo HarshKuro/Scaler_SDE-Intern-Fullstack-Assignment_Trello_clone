@@ -1,29 +1,29 @@
-﻿import dotenv from 'dotenv';
+import dotenv from 'dotenv';
 dotenv.config();
 
-import { supabase } from './supabase';
+import { db } from './index';
 
 async function seed() {
   console.log('ðŸŒ± Starting database seed...');
 
   // Clear existing data (in reverse dependency order)
   console.log('Clearing existing data...');
-  await supabase.from('activity_log').delete().neq('id', '00000000-0000-0000-0000-000000000000');
-  await supabase.from('comments').delete().neq('id', '00000000-0000-0000-0000-000000000000');
-  await supabase.from('attachments').delete().neq('id', '00000000-0000-0000-0000-000000000000');
-  await supabase.from('checklist_items').delete().neq('id', '00000000-0000-0000-0000-000000000000');
-  await supabase.from('checklists').delete().neq('id', '00000000-0000-0000-0000-000000000000');
-  await supabase.from('card_members').delete().neq('card_id', '00000000-0000-0000-0000-000000000000');
-  await supabase.from('card_labels').delete().neq('card_id', '00000000-0000-0000-0000-000000000000');
-  await supabase.from('cards').delete().neq('id', '00000000-0000-0000-0000-000000000000');
-  await supabase.from('labels').delete().neq('id', '00000000-0000-0000-0000-000000000000');
-  await supabase.from('lists').delete().neq('id', '00000000-0000-0000-0000-000000000000');
-  await supabase.from('boards').delete().neq('id', '00000000-0000-0000-0000-000000000000');
-  await supabase.from('members').delete().neq('id', '00000000-0000-0000-0000-000000000000');
+  await db.from('activity_log').delete().neq('id', '00000000-0000-0000-0000-000000000000');
+  await db.from('comments').delete().neq('id', '00000000-0000-0000-0000-000000000000');
+  await db.from('attachments').delete().neq('id', '00000000-0000-0000-0000-000000000000');
+  await db.from('checklist_items').delete().neq('id', '00000000-0000-0000-0000-000000000000');
+  await db.from('checklists').delete().neq('id', '00000000-0000-0000-0000-000000000000');
+  await db.from('card_members').delete().neq('card_id', '00000000-0000-0000-0000-000000000000');
+  await db.from('card_labels').delete().neq('card_id', '00000000-0000-0000-0000-000000000000');
+  await db.from('cards').delete().neq('id', '00000000-0000-0000-0000-000000000000');
+  await db.from('labels').delete().neq('id', '00000000-0000-0000-0000-000000000000');
+  await db.from('lists').delete().neq('id', '00000000-0000-0000-0000-000000000000');
+  await db.from('boards').delete().neq('id', '00000000-0000-0000-0000-000000000000');
+  await db.from('members').delete().neq('id', '00000000-0000-0000-0000-000000000000');
 
   // Seed members
   console.log('Seeding members...');
-  const { data: members, error: membersError } = await supabase
+  const { data: members, error: membersError } = await db
     .from('members')
     .insert([
       { full_name: 'Harsh Gupta', email: 'harsh@example.com', avatar_color: '#0079bf', initials: 'HG' },
@@ -44,7 +44,7 @@ async function seed() {
 
   // Seed boards
   console.log('Seeding boards...');
-  const { data: boards, error: boardsError } = await supabase
+  const { data: boards, error: boardsError } = await db
     .from('boards')
     .insert([
       {
@@ -69,7 +69,7 @@ async function seed() {
 
   // Seed labels for Board 1
   console.log('Seeding labels...');
-  const { data: labels, error: labelsError } = await supabase
+  const { data: labels, error: labelsError } = await db
     .from('labels')
     .insert([
       { board_id: board1.id, name: 'Feature', color: '#61bd4f' },
@@ -90,7 +90,7 @@ async function seed() {
   const [labelFeature, labelBug, labelDesign, labelCritical, labelEnhancement, labelResearch] = labels;
 
   // Seed labels for Board 2
-  const { error: labels2Error } = await supabase
+  const { error: labels2Error } = await db
     .from('labels')
     .insert([
       { board_id: board2.id, name: '', color: '#61bd4f' },
@@ -104,7 +104,7 @@ async function seed() {
 
   // Seed lists for Board 1
   console.log('Seeding lists...');
-  const { data: lists, error: listsError } = await supabase
+  const { data: lists, error: listsError } = await db
     .from('lists')
     .insert([
       { board_id: board1.id, title: 'To Do', position: 1000 },
@@ -123,7 +123,7 @@ async function seed() {
   const [todoList, doingList, doneList, backlogList] = lists;
 
   // Seed lists for Board 2
-  await supabase.from('lists').insert([
+  await db.from('lists').insert([
     { board_id: board2.id, title: 'Sprint Backlog', position: 1000 },
     { board_id: board2.id, title: 'In Progress', position: 2000 },
     { board_id: board2.id, title: 'Review', position: 3000 },
@@ -132,7 +132,7 @@ async function seed() {
 
   // Seed cards
   console.log('Seeding cards...');
-  const { data: cards, error: cardsError } = await supabase
+  const { data: cards, error: cardsError } = await db
     .from('cards')
     .insert([
       // To Do
@@ -228,7 +228,7 @@ async function seed() {
 
   // Assign labels to cards
   console.log('Assigning labels to cards...');
-  await supabase.from('card_labels').insert([
+  await db.from('card_labels').insert([
     { card_id: cards[0].id, label_id: labelFeature.id },
     { card_id: cards[0].id, label_id: labelResearch.id },
     { card_id: cards[1].id, label_id: labelDesign.id },
@@ -247,7 +247,7 @@ async function seed() {
 
   // Assign members to cards
   console.log('Assigning members to cards...');
-  await supabase.from('card_members').insert([
+  await db.from('card_members').insert([
     { card_id: cards[0].id, member_id: hg.id },
     { card_id: cards[0].id, member_id: rs.id },
     { card_id: cards[1].id, member_id: ar.id },
@@ -263,7 +263,7 @@ async function seed() {
 
   // Seed checklists
   console.log('Seeding checklists...');
-  const { data: checklists } = await supabase
+  const { data: checklists } = await db
     .from('checklists')
     .insert([
       { card_id: cards[0].id, title: 'Setup Tasks', position: 1000 },
@@ -273,7 +273,7 @@ async function seed() {
     .select();
 
   if (checklists) {
-    await supabase.from('checklist_items').insert([
+    await db.from('checklist_items').insert([
       // Setup Tasks checklist
       { checklist_id: checklists[0].id, title: 'Initialize Git repository', is_checked: true, position: 1000 },
       { checklist_id: checklists[0].id, title: 'Set up monorepo structure', is_checked: true, position: 2000 },
@@ -296,7 +296,7 @@ async function seed() {
 
   // Seed comments
   console.log('Seeding comments...');
-  await supabase.from('comments').insert([
+  await db.from('comments').insert([
     {
       card_id: cards[0].id,
       member_id: hg.id,
@@ -326,7 +326,7 @@ async function seed() {
 
   // Seed activity log
   console.log('Seeding activity log...');
-  await supabase.from('activity_log').insert([
+  await db.from('activity_log').insert([
     {
       board_id: board1.id,
       card_id: cards[0].id,

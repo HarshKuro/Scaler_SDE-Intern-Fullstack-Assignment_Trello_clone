@@ -1,17 +1,19 @@
 import { Request, Response, NextFunction } from 'express';
-import { supabase } from '../db/supabase';
+import { db, query, queryOne } from '../db';
 
 export const getComments = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const { id: card_id } = req.params;
 
-    const { data, error } = await supabase
-      .from('comments')
-      .select('*, member:member_id ( * )')
-      .eq('card_id', card_id)
-      .order('created_at', { ascending: false });
+    const data = await query(
+      `SELECT c.*, row_to_json(m.*) as member
+       FROM comments c
+       LEFT JOIN members m ON c.member_id = m.id
+       WHERE c.card_id = $1
+       ORDER BY c.created_at DESC`,
+      [card_id],
+    );
 
-    if (error) throw error;
     res.json({ data, error: null });
   } catch (err) {
     next(err);
@@ -23,23 +25,26 @@ export const addComment = async (req: Request, res: Response, next: NextFunction
     const { id: card_id } = req.params;
     const { member_id, text } = req.body;
 
-    const { data, error } = await supabase
-      .from('comments')
-      .insert({ card_id, member_id, text })
-      .select('*, member:member_id ( * )')
-      .single();
+    // Insert and return with member join
+    const comment = await queryOne(
+      `WITH inserted AS (
+        INSERT INTO comments (card_id, member_id, text) VALUES ($1, $2, $3) RETURNING *
+      )
+      SELECT i.*, row_to_json(m.*) as member
+      FROM inserted i
+      LEFT JOIN members m ON i.member_id = m.id`,
+      [card_id, member_id, text],
+    );
 
-    if (error) throw error;
+    // Activity log
+    const card = await queryOne<{ title: string; board_id: string }>(
+      'SELECT c.title, l.board_id FROM cards c JOIN lists l ON c.list_id = l.id WHERE c.id = $1',
+      [card_id],
+    );
 
-    const { data: card } = await supabase
-      .from('cards')
-      .select('title, lists:list_id ( board_id )')
-      .eq('id', card_id)
-      .single();
-
-    if (card?.lists) {
-      await supabase.from('activity_log').insert({
-        board_id: (card.lists as unknown as { board_id: string }).board_id,
+    if (card) {
+      await db.from('activity_log').insert({
+        board_id: card.board_id,
         card_id,
         member_id,
         action: 'comment_added',
@@ -47,7 +52,7 @@ export const addComment = async (req: Request, res: Response, next: NextFunction
       });
     }
 
-    res.status(201).json({ data, error: null });
+    res.status(201).json({ data: comment, error: null });
   } catch (err) {
     next(err);
   }
@@ -58,15 +63,17 @@ export const updateComment = async (req: Request, res: Response, next: NextFunct
     const { id } = req.params;
     const { text } = req.body;
 
-    const { data, error } = await supabase
-      .from('comments')
-      .update({ text, updated_at: new Date().toISOString() })
-      .eq('id', id)
-      .select('*, member:member_id ( * )')
-      .single();
+    const comment = await queryOne(
+      `WITH updated AS (
+        UPDATE comments SET text = $1, updated_at = NOW() WHERE id = $2 RETURNING *
+      )
+      SELECT u.*, row_to_json(m.*) as member
+      FROM updated u
+      LEFT JOIN members m ON u.member_id = m.id`,
+      [text, id],
+    );
 
-    if (error) throw error;
-    res.json({ data, error: null });
+    res.json({ data: comment, error: null });
   } catch (err) {
     next(err);
   }
@@ -75,7 +82,7 @@ export const updateComment = async (req: Request, res: Response, next: NextFunct
 export const deleteComment = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const { id } = req.params;
-    const { error } = await supabase.from('comments').delete().eq('id', id);
+    const { error } = await db.from('comments').delete().eq('id', id);
     if (error) throw error;
     res.json({ data: { id }, error: null });
   } catch (err) {

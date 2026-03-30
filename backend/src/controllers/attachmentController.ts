@@ -1,8 +1,14 @@
 import { Request, Response, NextFunction } from 'express';
-import { supabase } from '../db/supabase';
+import { db } from '../db';
 import multer from 'multer';
 import { v4 as uuidv4 } from 'uuid';
 import path from 'path';
+import fs from 'fs';
+
+const UPLOADS_DIR = path.join(__dirname, '../../uploads/attachments');
+
+// Ensure uploads directory exists
+fs.mkdirSync(UPLOADS_DIR, { recursive: true });
 
 const storage = multer.memoryStorage();
 export const upload = multer({
@@ -12,7 +18,7 @@ export const upload = multer({
 
 export const addAttachment = async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const { id: card_id } = req.params;
+    const card_id = req.params.id as string;
     const file = req.file;
 
     if (!file) {
@@ -22,27 +28,21 @@ export const addAttachment = async (req: Request, res: Response, next: NextFunct
 
     const ext = path.extname(file.originalname);
     const filename = `${uuidv4()}${ext}`;
-    const filePath = `attachments/${card_id}/${filename}`;
+    const cardDir = path.join(UPLOADS_DIR, card_id);
+    fs.mkdirSync(cardDir, { recursive: true });
 
-    const { error: uploadError } = await supabase.storage
-      .from('attachments')
-      .upload(filePath, file.buffer, {
-        contentType: file.mimetype,
-        upsert: false,
-      });
+    const filePath = path.join(cardDir, filename);
+    fs.writeFileSync(filePath, file.buffer);
 
-    if (uploadError) throw uploadError;
+    // Build public URL relative to API server
+    const publicUrl = `/uploads/attachments/${card_id}/${filename}`;
 
-    const { data: publicUrlData } = supabase.storage
-      .from('attachments')
-      .getPublicUrl(filePath);
-
-    const { data, error } = await supabase
+    const { data, error } = await db
       .from('attachments')
       .insert({
         card_id,
         file_name: file.originalname,
-        url: publicUrlData.publicUrl,
+        url: publicUrl,
         mime_type: file.mimetype,
         file_size: file.size,
       })
@@ -60,21 +60,21 @@ export const deleteAttachment = async (req: Request, res: Response, next: NextFu
   try {
     const { id } = req.params;
 
-    const { data: attachment } = await supabase
+    const { data: attachment } = await db
       .from('attachments')
       .select('url')
       .eq('id', id)
       .single();
 
-    if (attachment?.url) {
-      const urlPath = new URL(attachment.url).pathname;
-      const storagePath = urlPath.split('/storage/v1/object/public/attachments/')[1];
-      if (storagePath) {
-        await supabase.storage.from('attachments').remove([storagePath]);
+    // Delete physical file if it's a local upload
+    if (attachment?.url && (attachment.url as string).startsWith('/uploads/')) {
+      const filePath = path.join(__dirname, '../..', attachment.url as string);
+      if (fs.existsSync(filePath)) {
+        fs.unlinkSync(filePath);
       }
     }
 
-    const { error } = await supabase.from('attachments').delete().eq('id', id);
+    const { error } = await db.from('attachments').delete().eq('id', id);
     if (error) throw error;
     res.json({ data: { id }, error: null });
   } catch (err) {

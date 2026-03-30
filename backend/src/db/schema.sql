@@ -1,5 +1,5 @@
 -- KanFlow Database Schema
--- Run this in Supabase SQL Editor to create all tables
+-- Run this SQL on your Neon PostgreSQL database to create all tables
 
 -- MEMBERS (pre-seeded, no auth needed)
 CREATE TABLE IF NOT EXISTS members (

@@ -14,7 +14,8 @@
     "build": "next build && pnpm --filter backend build",
     "start": "next start",
     "lint": "eslint",
-    "seed": "pnpm --filter backend seed"
+    "seed": "pnpm --filter backend seed",
+    "test": "npx tsx test-all.ts"
   },
   "dependencies": {
     "@dnd-kit/core": "^6.3.1",

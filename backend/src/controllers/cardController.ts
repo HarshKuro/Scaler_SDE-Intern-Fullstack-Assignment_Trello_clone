@@ -1,5 +1,5 @@
 import { Request, Response, NextFunction } from 'express';
-import { supabase } from '../db/supabase';
+import { db, query, queryOne } from '../db';
 
 export const createCard = async (req: Request, res: Response, next: NextFunction) => {
   try {
@@ -7,7 +7,7 @@ export const createCard = async (req: Request, res: Response, next: NextFunction
 
     let pos = position;
     if (pos === undefined) {
-      const { data: lastCard } = await supabase
+      const { data: lastCard } = await db
         .from('cards')
         .select('position')
         .eq('list_id', list_id)
@@ -17,7 +17,7 @@ export const createCard = async (req: Request, res: Response, next: NextFunction
       pos = lastCard ? lastCard.position + 1000 : 1000;
     }
 
-    const { data, error } = await supabase
+    const { data, error } = await db
       .from('cards')
       .insert({ list_id, title, position: pos })
       .select()
@@ -25,14 +25,13 @@ export const createCard = async (req: Request, res: Response, next: NextFunction
 
     if (error) throw error;
 
-    const { data: list } = await supabase
-      .from('lists')
-      .select('board_id, title')
-      .eq('id', list_id)
-      .single();
+    const list = await queryOne<{ board_id: string; title: string }>(
+      'SELECT board_id, title FROM lists WHERE id = $1',
+      [list_id],
+    );
 
     if (list) {
-      await supabase.from('activity_log').insert({
+      await db.from('activity_log').insert({
         board_id: list.board_id,
         card_id: data.id,
         member_id: null,
@@ -51,33 +50,64 @@ export const getCard = async (req: Request, res: Response, next: NextFunction) =
   try {
     const { id } = req.params;
 
-    const { data, error } = await supabase
-      .from('cards')
-      .select(`
-        *,
-        list:list_id ( board_id ),
-        labels:card_labels ( ...labels ( * ) ),
-        members:card_members ( ...members ( * ) ),
-        checklists (
-          *,
-          items:checklist_items ( * )
-        ),
-        attachments ( * ),
-        comments ( *, member:member_id ( * ) )
-      `)
-      .eq('id', id)
-      .single();
+    // Card + board_id from list
+    const card = await queryOne(
+      'SELECT c.*, l.board_id FROM cards c JOIN lists l ON c.list_id = l.id WHERE c.id = $1',
+      [id],
+    );
+    if (!card) {
+      res.status(404).json({ data: null, error: { message: 'Card not found' } });
+      return;
+    }
 
-    if (error) throw error;
+    // Fetch all relations in parallel
+    const [labels, members, checklists, attachments, comments] = await Promise.all([
+      query(
+        `SELECT l.* FROM card_labels cl JOIN labels l ON cl.label_id = l.id WHERE cl.card_id = $1`,
+        [id],
+      ),
+      query(
+        `SELECT m.* FROM card_members cm JOIN members m ON cm.member_id = m.id WHERE cm.card_id = $1`,
+        [id],
+      ),
+      query('SELECT * FROM checklists WHERE card_id = $1 ORDER BY position', [id]),
+      query('SELECT * FROM attachments WHERE card_id = $1 ORDER BY created_at', [id]),
+      query(
+        `SELECT c.*, row_to_json(m.*) as member FROM comments c
+         LEFT JOIN members m ON c.member_id = m.id
+         WHERE c.card_id = $1 ORDER BY c.created_at DESC`,
+        [id],
+      ),
+    ]);
 
-    // Flatten board_id from the nested list join
-    const cardData = {
-      ...data,
-      board_id: (data.list as { board_id: string })?.board_id,
-    };
-    delete (cardData as Record<string, unknown>).list;
+    // Checklist items
+    const checklistIds = checklists.map((cl: Record<string, unknown>) => cl.id);
+    const checklistItems =
+      checklistIds.length > 0
+        ? await query(
+            'SELECT * FROM checklist_items WHERE checklist_id = ANY($1) ORDER BY position',
+            [checklistIds],
+          )
+        : [];
 
-    res.json({ data: cardData, error: null });
+    const checklistsWithItems = checklists.map((cl: Record<string, unknown>) => ({
+      ...cl,
+      items: (checklistItems as Record<string, unknown>[]).filter(
+        (i) => i.checklist_id === cl.id,
+      ),
+    }));
+
+    res.json({
+      data: {
+        ...card,
+        labels,
+        members,
+        checklists: checklistsWithItems,
+        attachments,
+        comments,
+      },
+      error: null,
+    });
   } catch (err) {
     next(err);
   }
@@ -88,13 +118,14 @@ export const updateCard = async (req: Request, res: Response, next: NextFunction
     const { id } = req.params;
     const updates = req.body;
 
-    const { data: oldCard } = await supabase
-      .from('cards')
-      .select('*, lists:list_id ( board_id, title )')
-      .eq('id', id)
-      .single();
+    // Get old card with list info for activity logging
+    const oldCard = await queryOne<Record<string, unknown>>(
+      `SELECT c.*, l.board_id, l.title as list_title FROM cards c
+       JOIN lists l ON c.list_id = l.id WHERE c.id = $1`,
+      [id],
+    );
 
-    const { data, error } = await supabase
+    const { data, error } = await db
       .from('cards')
       .update({ ...updates, updated_at: new Date().toISOString() })
       .eq('id', id)
@@ -103,30 +134,29 @@ export const updateCard = async (req: Request, res: Response, next: NextFunction
 
     if (error) throw error;
 
-    if (oldCard?.lists) {
-      const boardId = (oldCard.lists as unknown as { board_id: string }).board_id;
+    if (oldCard) {
+      const boardId = oldCard.board_id as string;
 
       if (updates.list_id && updates.list_id !== oldCard.list_id) {
-        const { data: newList } = await supabase
-          .from('lists')
-          .select('title')
-          .eq('id', updates.list_id)
-          .single();
+        const newList = await queryOne<{ title: string }>(
+          'SELECT title FROM lists WHERE id = $1',
+          [updates.list_id],
+        );
 
-        await supabase.from('activity_log').insert({
+        await db.from('activity_log').insert({
           board_id: boardId,
           card_id: id,
           action: 'card_moved',
           data: {
             card_title: oldCard.title,
-            from_list: (oldCard.lists as unknown as { title: string }).title,
+            from_list: oldCard.list_title,
             to_list: newList?.title,
           },
         });
       }
 
       if (updates.due_date !== undefined) {
-        await supabase.from('activity_log').insert({
+        await db.from('activity_log').insert({
           board_id: boardId,
           card_id: id,
           action: 'due_date_changed',
@@ -144,7 +174,7 @@ export const updateCard = async (req: Request, res: Response, next: NextFunction
 export const deleteCard = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const { id } = req.params;
-    const { error } = await supabase.from('cards').delete().eq('id', id);
+    const { error } = await db.from('cards').delete().eq('id', id);
     if (error) throw error;
     res.json({ data: { id }, error: null });
   } catch (err) {
@@ -164,7 +194,7 @@ export const reorderCards = async (req: Request, res: Response, next: NextFuncti
       if (item.list_id) {
         updateData.list_id = item.list_id;
       }
-      return supabase.from('cards').update(updateData).eq('id', item.id);
+      return db.from('cards').update(updateData).eq('id', item.id);
     });
 
     await Promise.all(updates);
@@ -183,25 +213,27 @@ export const searchCards = async (req: Request, res: Response, next: NextFunctio
       return;
     }
 
-    let query = supabase
-      .from('cards')
-      .select('*, lists:list_id ( board_id, title )')
-      .ilike('title', `%${q}%`)
-      .eq('is_archived', false)
-      .limit(20);
+    let sql = `SELECT c.*, l.board_id, l.title as list_title
+               FROM cards c JOIN lists l ON c.list_id = l.id
+               WHERE c.title ILIKE $1 AND c.is_archived = false`;
+    const params: unknown[] = [`%${q}%`];
 
     if (board_id && typeof board_id === 'string') {
-      query = query.eq('lists.board_id', board_id);
+      sql += ' AND l.board_id = $2';
+      params.push(board_id);
     }
 
-    const { data, error } = await query;
-    if (error) throw error;
+    sql += ' LIMIT 20';
 
-    const filtered = board_id
-      ? data?.filter((card: Record<string, unknown>) => card.lists !== null)
-      : data;
+    const data = await query(sql, params);
 
-    res.json({ data: filtered, error: null });
+    // Reshape to match frontend expectations: nest list info
+    const shaped = (data as Record<string, unknown>[]).map((row) => {
+      const { board_id: bId, list_title, ...card } = row;
+      return { ...card, lists: { board_id: bId, title: list_title } };
+    });
+
+    res.json({ data: shaped, error: null });
   } catch (err) {
     next(err);
   }

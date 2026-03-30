@@ -1,6 +1,6 @@
 # KanFlow — Trello Clone
 
-A pixel-perfect, full-stack Kanban project management tool inspired by Trello. Built with **Next.js 16**, **Express.js**, and **Supabase (PostgreSQL)**.
+A pixel-perfect, full-stack Kanban project management tool inspired by Trello. Built with **Next.js 16**, **Express.js**, and **Neon (PostgreSQL)**.
 
 > **Author:** Harsh Partap Jain ([harshpartapjainsdg@gmail.com](mailto:harshpartapjainsdg@gmail.com)) — [dev.harshpartapjain.site](https://dev.harshpartapjain.site)
 >
@@ -18,7 +18,7 @@ A pixel-perfect, full-stack Kanban project management tool inspired by Trello. B
   - [Prerequisites](#prerequisites)
   - [1. Clone the Repository](#1-clone-the-repository)
   - [2. Install Dependencies](#2-install-dependencies)
-  - [3. Set Up Supabase](#3-set-up-supabase)
+  - [3. Set Up Neon PostgreSQL](#3-set-up-neon-postgresql)
   - [4. Configure Environment Variables](#4-configure-environment-variables)
   - [5. Run the SQL Schema](#5-run-the-sql-schema)
   - [6. Seed the Database](#6-seed-the-database)
@@ -110,7 +110,7 @@ A pixel-perfect, full-stack Kanban project management tool inspired by Trello. B
 | **HTTP Client** | Axios | 1.14.0 |
 | **Notifications** | react-hot-toast | 2.6.0 |
 | **Backend** | Express.js | 4.21.0 |
-| **Database** | Supabase (PostgreSQL) | — |
+| **Database** | Neon (PostgreSQL) | — |
 | **Validation** | express-validator | 7.2.1 |
 | **Security** | Helmet | 8.0.0 |
 | **File Uploads** | Multer | 1.4.5 |
@@ -142,9 +142,9 @@ A pixel-perfect, full-stack Kanban project management tool inspired by Trello. B
 │  │  ├── Middleware (error handler)      │            │
 │  │  └── Validation (express-validator)  │            │
 │  └──────────────┬───────────────────────┘            │
-│                 │ Supabase Client                    │
+│                 │ pg (node-postgres)                  │
 │  ┌──────────────▼───────────────────────┐            │
-│  │  Supabase (PostgreSQL)               │            │
+│  │  Neon PostgreSQL                     │            │
 │  │  ├── 11 Tables                       │            │
 │  │  ├── Indexes for performance         │            │
 │  │  └── Cascading deletes               │            │
@@ -223,8 +223,9 @@ kanflow/
 │   │   ├── middleware/
 │   │   │   └── errorHandler.ts   # Global error handler
 │   │   └── db/
-│   │       ├── supabase.ts       # Supabase client init
-│   │       ├── schema.sql        # Database schema (copy below)
+│   │       ├── neon.ts            # Neon PostgreSQL client (pg pool + query builder)
+│   │       ├── index.ts           # DB exports (db, query, queryOne)
+│   │       ├── schema.sql        # Database schema
 │   │       └── seed.ts           # Seed data script
 │   ├── package.json
 │   ├── tsconfig.json
@@ -247,7 +248,7 @@ kanflow/
 
 - **Node.js** 18.x or later
 - **pnpm** 8.x or later (`npm install -g pnpm`)
-- **Supabase account** (free tier works) — [supabase.com](https://supabase.com)
+- **Neon account** (free tier works) — [neon.tech](https://neon.tech)
 
 ### 1. Clone the Repository
 
@@ -264,11 +265,11 @@ pnpm install
 
 This installs both frontend and backend dependencies via pnpm workspaces.
 
-### 3. Set Up Supabase
+### 3. Set Up Neon PostgreSQL
 
-1. Go to [supabase.com](https://supabase.com) and create a new project
-2. Note your **Project URL** and **Service Role Key** from Settings → API
-3. Wait for the database to be provisioned
+1. Go to [neon.tech](https://neon.tech) and create a new project
+2. Copy the **connection string** from the dashboard (pooled endpoint recommended)
+3. The database is provisioned instantly
 
 ### 4. Configure Environment Variables
 
@@ -276,8 +277,7 @@ This installs both frontend and backend dependencies via pnpm workspaces.
 
 ```env
 PORT=5000
-SUPABASE_URL=https://your-project-id.supabase.co
-SUPABASE_SERVICE_ROLE_KEY=your_service_role_key_here
+DATABASE_URL=postgresql://user:password@ep-xxx.region.aws.neon.tech/neondb?sslmode=require
 FRONTEND_URL=http://localhost:3000
 NODE_ENV=development
 ```
@@ -290,7 +290,7 @@ NEXT_PUBLIC_API_URL=http://localhost:5000/api
 
 ### 5. Run the SQL Schema
 
-Copy the [Database Schema](#database-schema) SQL below and run it in the **Supabase SQL Editor** (Dashboard → SQL Editor → New query → Paste → Run).
+Copy the [Database Schema](#database-schema) SQL below and run it in the **Neon SQL Editor** (Dashboard → SQL Editor → Paste → Run), or use any PostgreSQL client connected to your Neon database.
 
 ### 6. Seed the Database
 

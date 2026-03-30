@@ -1,10 +1,10 @@
 import { Request, Response, NextFunction } from 'express';
-import { supabase } from '../db/supabase';
+import { db } from '../db';
 
 export const getBoardLabels = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const { id } = req.params;
-    const { data, error } = await supabase
+    const { data, error } = await db
       .from('labels')
       .select('*')
       .eq('board_id', id)
@@ -22,7 +22,7 @@ export const createLabel = async (req: Request, res: Response, next: NextFunctio
     const { id: board_id } = req.params;
     const { name, color } = req.body;
 
-    const { data, error } = await supabase
+    const { data, error } = await db
       .from('labels')
       .insert({ board_id, name: name || '', color })
       .select()
@@ -40,7 +40,7 @@ export const updateLabel = async (req: Request, res: Response, next: NextFunctio
     const { id } = req.params;
     const updates = req.body;
 
-    const { data, error } = await supabase
+    const { data, error } = await db
       .from('labels')
       .update(updates)
       .eq('id', id)
@@ -57,7 +57,7 @@ export const updateLabel = async (req: Request, res: Response, next: NextFunctio
 export const deleteLabel = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const { id } = req.params;
-    const { error } = await supabase.from('labels').delete().eq('id', id);
+    const { error } = await db.from('labels').delete().eq('id', id);
     if (error) throw error;
     res.json({ data: { id }, error: null });
   } catch (err) {
@@ -69,7 +69,7 @@ export const addLabelToCard = async (req: Request, res: Response, next: NextFunc
   try {
     const { id: card_id, labelId: label_id } = req.params;
 
-    const { data, error } = await supabase
+    const { data, error } = await db
       .from('card_labels')
       .insert({ card_id, label_id })
       .select()
@@ -86,7 +86,7 @@ export const removeLabelFromCard = async (req: Request, res: Response, next: Nex
   try {
     const { id: card_id, labelId: label_id } = req.params;
 
-    const { error } = await supabase
+    const { error } = await db
       .from('card_labels')
       .delete()
       .eq('card_id', card_id)

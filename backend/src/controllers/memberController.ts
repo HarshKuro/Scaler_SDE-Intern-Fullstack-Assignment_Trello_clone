@@ -1,9 +1,9 @@
 import { Request, Response, NextFunction } from 'express';
-import { supabase } from '../db/supabase';
+import { db, queryOne } from '../db';
 
 export const getMembers = async (_req: Request, res: Response, next: NextFunction) => {
   try {
-    const { data, error } = await supabase
+    const { data, error } = await db
       .from('members')
       .select('*')
       .order('full_name');
@@ -19,7 +19,7 @@ export const addMemberToCard = async (req: Request, res: Response, next: NextFun
   try {
     const { id: card_id, memberId: member_id } = req.params;
 
-    const { data, error } = await supabase
+    const { data, error } = await db
       .from('card_members')
       .insert({ card_id, member_id })
       .select()
@@ -27,21 +27,20 @@ export const addMemberToCard = async (req: Request, res: Response, next: NextFun
 
     if (error) throw error;
 
-    const { data: card } = await supabase
-      .from('cards')
-      .select('title, lists:list_id ( board_id )')
-      .eq('id', card_id)
-      .single();
+    // Get card + board_id and member name for activity log
+    const card = await queryOne<{ title: string; board_id: string }>(
+      'SELECT c.title, l.board_id FROM cards c JOIN lists l ON c.list_id = l.id WHERE c.id = $1',
+      [card_id],
+    );
 
-    const { data: member } = await supabase
-      .from('members')
-      .select('full_name')
-      .eq('id', member_id)
-      .single();
+    const member = await queryOne<{ full_name: string }>(
+      'SELECT full_name FROM members WHERE id = $1',
+      [member_id],
+    );
 
-    if (card?.lists) {
-      await supabase.from('activity_log').insert({
-        board_id: (card.lists as unknown as { board_id: string }).board_id,
+    if (card) {
+      await db.from('activity_log').insert({
+        board_id: card.board_id,
         card_id,
         member_id,
         action: 'member_assigned',
@@ -59,7 +58,7 @@ export const removeMemberFromCard = async (req: Request, res: Response, next: Ne
   try {
     const { id: card_id, memberId: member_id } = req.params;
 
-    const { error } = await supabase
+    const { error } = await db
       .from('card_members')
       .delete()
       .eq('card_id', card_id)
